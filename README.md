@@ -3,6 +3,8 @@
 猫の手から逃げながら、制限時間内にアイテムを集めるブラウザアクションゲーム。
 Power Apps Code App 版（`FightHamuko`）をベースに、純粋なブラウザゲーム（Vite + React、Power Apps 依存なし）として作り直した DX 版です。
 
+**🎮 [ゲームをプレイする](https://minoru365.github.io/FightHamukoDX/)**
+
 ## 遊び方
 
 - **移動**: 矢印キー / WASD キー、または画面をドラッグして仮想ジョイスティック操作
