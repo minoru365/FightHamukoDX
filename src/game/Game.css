@@ -266,6 +266,16 @@
   cursor: pointer;
   line-height: 1;
 }
+.mute-btn.in-game.active {
+  border-color: #5dff9d;
+  box-shadow: 0 0 8px rgba(93, 255, 157, 0.5);
+}
+.info-actions {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex: 0 0 auto;
+}
 
 /* コンボ */
 .combo-display {
@@ -435,8 +445,14 @@
   padding: 8px;
   border-radius: 10px;
 }
-.mute-btn {
+.title-btns {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
   margin-top: 10px;
+  flex-wrap: wrap;
+}
+.mute-btn {
   background: #2a1758;
   color: #fff;
   border: none;

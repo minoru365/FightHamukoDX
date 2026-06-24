@@ -256,6 +256,11 @@ export default function Game() {
   const joyBaseRef = useRef({ x: 0, y: 0 })
   const joyActiveRef = useRef(false)
 
+  // 傾きセンサー操作
+  const [tiltEnabled, setTiltEnabled] = useState(false)
+  const [tiltSupported, setTiltSupported] = useState(false)
+  const tiltEnabledRef = useRef(false)
+
   // 画面サイズ → スケール
   const [screen, setScreen] = useState({ w: GAME_WIDTH, h: GAME_HEIGHT })
   useEffect(() => {
@@ -360,6 +365,77 @@ export default function Game() {
     setJoyStick({ x: 0, y: 0 })
     accelRef.current = { x: 0, y: 0 }
     gameAreaRef.current?.focus()
+  }
+
+  // ===== 入力（傾きセンサー） =====
+  useEffect(() => {
+    // DeviceOrientationEvent が使えるか検出
+    const hasOrientation = 'DeviceOrientationEvent' in window
+    setTiltSupported(hasOrientation)
+  }, [])
+
+  useEffect(() => {
+    if (!tiltEnabled) return
+    tiltEnabledRef.current = true
+    const DEAD_ZONE = 4 // 度
+    const MAX_ANGLE = 30 // 最大傾き角
+    const SENSITIVITY = 1.7
+
+    const handleOrientation = (e: DeviceOrientationEvent) => {
+      if (!tiltEnabledRef.current) return
+      if (joyActiveRef.current) return // ジョイスティック操作中は傾き無視
+      if (keysRef.current.size > 0) return // キーボード操作中は傾き無視
+
+      const gamma = e.gamma ?? 0 // 左右傾き (-90..90)
+      const beta = e.beta ?? 0  // 前後傾き (-180..180)
+
+      // デッドゾーン適用
+      let ax = Math.abs(gamma) < DEAD_ZONE ? 0 : (gamma - Math.sign(gamma) * DEAD_ZONE) / (MAX_ANGLE - DEAD_ZONE)
+      let ay = Math.abs(beta - 20) < DEAD_ZONE ? 0 : ((beta - 20) - Math.sign(beta - 20) * DEAD_ZONE) / (MAX_ANGLE - DEAD_ZONE)
+      // beta の基準を20度（自然な持ち方）にオフセット
+
+      // clamp to -1..1
+      ax = Math.max(-1, Math.min(1, ax))
+      ay = Math.max(-1, Math.min(1, ay))
+
+      accelRef.current = { x: ax * SENSITIVITY, y: ay * SENSITIVITY }
+    }
+
+    window.addEventListener('deviceorientation', handleOrientation)
+    return () => {
+      tiltEnabledRef.current = false
+      window.removeEventListener('deviceorientation', handleOrientation)
+    }
+  }, [tiltEnabled])
+
+  const requestTilt = async () => {
+    // iOS 13+ は明示的な許可が必要
+    const DOE = DeviceOrientationEvent as unknown as { requestPermission?: () => Promise<string> }
+    if (typeof DOE.requestPermission === 'function') {
+      try {
+        const perm = await DOE.requestPermission()
+        if (perm === 'granted') {
+          setTiltEnabled(true)
+          tiltEnabledRef.current = true
+        }
+      } catch {
+        /* ユーザーが拒否、または API エラー */
+      }
+    } else {
+      // Android / デスクトップ → そのまま有効化
+      setTiltEnabled(true)
+      tiltEnabledRef.current = true
+    }
+  }
+
+  const toggleTilt = () => {
+    if (tiltEnabled) {
+      setTiltEnabled(false)
+      tiltEnabledRef.current = false
+      accelRef.current = { x: 0, y: 0 }
+    } else {
+      void requestTilt()
+    }
   }
 
   // ===== ゲームループ（固定タイムステップ rAF） =====
@@ -750,7 +826,12 @@ export default function Game() {
               <div className="hud-pill">🌟 {w.collected}/{w.totalItems}</div>
               <div className="hud-pill score">💰 {w.score.toLocaleString()}</div>
             </div>
-            <button className="mute-btn in-game" onClick={toggleMute}>{muted ? '🔇' : '🔊'}</button>
+            <div className="info-actions">
+              {tiltSupported && (
+                <button className={`mute-btn in-game${tiltEnabled ? ' active' : ''}`} onClick={toggleTilt}>📱</button>
+              )}
+              <button className="mute-btn in-game" onClick={toggleMute}>{muted ? '🔇' : '🔊'}</button>
+            </div>
           </div>
         )}
         <div
@@ -948,8 +1029,18 @@ export default function Game() {
                 ))}
               </div>
 
-              <div className="control-hint">🕹️ 画面ドラッグ ・ ⌨️ 矢印/WASD キーで移動</div>
-              <button className="mute-btn" onClick={toggleMute}>{muted ? '🔇 ミュート中' : '🔊 サウンドON'}</button>
+              <div className="control-hint">
+                🕹️ 画面ドラッグ ・ ⌨️ 矢印/WASD キーで移動
+                {tiltSupported && ' ・ 📱 傾きセンサー'}
+              </div>
+              <div className="title-btns">
+                <button className="mute-btn" onClick={toggleMute}>{muted ? '🔇 ミュート中' : '🔊 サウンドON'}</button>
+                {tiltSupported && (
+                  <button className="mute-btn" onClick={toggleTilt}>
+                    {tiltEnabled ? '📱 傾きON' : '📱 傾きOFF'}
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         )}
