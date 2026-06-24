@@ -16,12 +16,12 @@
   flex-direction: column;
   align-items: stretch;
   height: 100%;
-  width: min(100vw, calc((100vh - 64px) * 11 / 20));
+  width: min(100vw, calc((100vh - 56px) * 11 / 20));
 }
 
 .info-bar {
   flex: 0 0 auto;
-  height: 60px;
+  height: 56px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -32,6 +32,7 @@
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
   z-index: 200;
   container-type: inline-size;
+  overflow: hidden;
 }
 .info-stats {
   display: flex;
@@ -252,14 +253,18 @@
 
 .mute-btn.in-game {
   flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: rgba(13, 8, 32, 0.7);
   border: 1px solid rgba(255, 255, 255, 0.25);
   color: #fff;
-  font-size: clamp(14px, 6cqw, 18px);
+  font-size: 16px;
   border-radius: 999px;
-  width: clamp(32px, 11cqw, 40px);
-  height: clamp(32px, 11cqw, 40px);
+  width: 36px;
+  height: 36px;
   cursor: pointer;
+  line-height: 1;
 }
 
 /* コンボ */

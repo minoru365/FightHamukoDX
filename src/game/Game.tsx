@@ -929,7 +929,7 @@ export default function Game() {
 
         {/* タイトル */}
         {phase === 'title' && (
-          <div className="overlay title-overlay">
+          <div className="overlay title-overlay" onPointerDown={() => audio.playMusic('title')}>
             <div className="title-card">
               <h1 className="title">🐹 がんばれハム子 <span className="dx">DX</span></h1>
               <p className="subtitle">猫の手から逃げて、制限時間内にアイテムを集めよう！</p>

@@ -165,6 +165,7 @@ export class AudioEngine {
     // 既に同じ曲が鳴っていれば何もしない（クリア曲は毎回頭出し）
     if (this.currentTrack === track && track !== 'clear') return
     this.stopMusic()
+    this.pendingTrack = null // 保留中のトラックをクリア
     this.currentTrack = track
     const el = this.getMusicEl(track)
     el.muted = this._muted
@@ -199,7 +200,14 @@ export class AudioEngine {
       if (this.pendingTrack) {
         const t = this.pendingTrack
         this.pendingTrack = null
-        this.playMusic(t)
+        // 遅延で再生（同じクリックで startGame が別トラックを設定する場合に備える）
+        setTimeout(() => {
+          // pendingTrack がクリアされていなければ再生
+          if (this.currentTrack === t || !this.currentTrack) {
+            this.currentTrack = null // 再入防止をリセット
+            this.playMusic(t)
+          }
+        }, 0)
       }
     }
     window.addEventListener('pointerdown', unlock, { once: true })
